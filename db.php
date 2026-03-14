@@ -17,11 +17,10 @@ $options = [
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (PDOException $e) {
-    
     exit('データベース接続に失敗しました: ' . $e->getMessage());
 }
 
-// テーブルが存在しない場合は作成（completed / description を含む）
+// PDOはDBとPHPをつなぐIF、execはSQLをそのまま実行する
 $pdo->exec(
     "CREATE TABLE IF NOT EXISTS tasks (
         id INT AUTO_INCREMENT PRIMARY KEY,

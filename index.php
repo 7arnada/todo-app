@@ -40,12 +40,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     }
 }
 
+// タスクの一括削除処理
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete']) ){
+    
+    $bulkDeleteIds = $_POST['bulk_delete']; 
+    if (!empty($bulkDeleteIds)) {
+        $stmt = $pdo->prepare("DELETE FROM tasks WHERE completed = 1");
+        $stmt->execute();
+        // 成功したらリダイレクト
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
+    }
+}
+
+
 // タスクの完了状態トグル処理
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_id'])) {
     $toggleId = (int)$_POST['toggle_id'];
     if ($toggleId > 0) {
         $stmt = $pdo->prepare('UPDATE tasks SET completed = 1 - completed WHERE id = :id');
         $stmt->execute(['id' => $toggleId]);
+        // 成功したらリダイレクト
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
+    }
+}
+
+// タスクの完了状態トグル処理
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids[]'])) {
+    $deleteIds = (int)$_POST['delete_ids[]'];
+    if ($deleteIds > 0) {
+        $stmt = $pdo->prepare('UPDATE tasks SET completed = 1 - completed WHERE id = :id');
+        $stmt->execute(['id' => $deleteIds]);
         // 成功したらリダイレクト
         header('Location: ' . $_SERVER['REQUEST_URI']);
         exit;
@@ -98,6 +124,11 @@ $tasks = $stmt->fetchAll();
         <input type="text" name="description" placeholder="メモ (任意)">
         <button type="submit">追加</button>
     </form>
+    <form method="POST" action="">
+        <input type="hidden" name="bulk_delete" value="<?php echo $task['id']; ?>">
+        <button type="submit" name="bulk_delete" value="1" onclick="return confirm('選択したタスクを削除しますか？')">一括削除</button>
+    </form>
+
 
     <!-- タスクリスト表示 -->
     <table class="task-table">
@@ -112,7 +143,7 @@ $tasks = $stmt->fetchAll();
         </thead>
         <tbody>
         <?php foreach ($tasks as $task): ?>
-            <tr class="<?php echo $task['completed'] ? 'completed' : ''; ?>">
+            <tr class="<?php echo $task['completed'] ? 'completed' : ''; ?>"><!--タスクが完了している場合は行全体に 'completed' クラスを追加-->
                 <td>
                     <form method="POST" action="">
                         <input type="hidden" name="toggle_id" value="<?php echo $task['id']; ?>">
