@@ -15,12 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['theme'])) {
 // 現在のテーマを取得（デフォルト: white）
 $currentTheme = $_SESSION['theme'] ?? 'white';
 
-// タスクの追加処理
+// タスクの追加処理 if文の中身→POST送信されたか？かつtaskが存在するか？
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['task'])) {
-    $newTask = trim($_POST['task']);
+    $newTask = trim($_POST['task']);// trimは前後の空白を削除する関数
     $description = trim($_POST['description'] ?? '');
     if (!empty($newTask)) {
-        $stmt = $pdo->prepare('INSERT INTO tasks (title, description) VALUES (:title, :description)');
+        $stmt = $pdo->prepare('INSERT INTO tasks (title, description) VALUES (:title, :description)');// $pdo->prepareはそのオブジェクトの機能を呼ぶ
         $stmt->execute(['title' => $newTask, 'description' => $description]);
         // 成功したらリダイレクトしてPOSTリクエストの再送を防ぐ
         header('Location: ' . $_SERVER['REQUEST_URI']);
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_id'])) {
     }
 }
 
-// メモ更新処理
+// メモ更新処理。preareはSQLインジェクション対策用の安全にSQLを実行するメソッド。 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['memo_id'])) {
     $memoId = (int)$_POST['memo_id'];
     $memo = trim($_POST['memo'] ?? '');
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['memo_id'])) {
     }
 }
 
-// タスク一覧を取得
+// タスク一覧を取得。fetchAllは結果を全部取り出す
 $stmt = $pdo->query('SELECT id, title, completed, description, created_at FROM tasks ORDER BY created_at DESC');
 $tasks = $stmt->fetchAll();
 ?>
