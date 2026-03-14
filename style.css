@@ -1,0 +1,64 @@
+/* テーマ用 */
+body.theme-white { background-color: #fff; color: #000; }
+body.theme-dark { background-color: #333; color: #fff; }
+body.theme-pink { background-color: #ffb6c1; color: #000; }
+body.theme-auto { /* JS で設定 */ }
+
+@media (prefers-color-scheme: dark) {
+    body.theme-auto { background-color: #333; color: #fff; }
+}
+@media (prefers-color-scheme: light) {
+    body.theme-auto { background-color: #fff; color: #000; }
+}
+
+.theme-selector {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+.task-table th,
+.task-table td {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    padding: 0.5rem;
+    vertical-align: top;
+}
+.task-table th {
+    background: rgba(0, 0, 0, 0.05);
+    text-align: left;
+}
+.task-table tr.completed td {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.memo-textarea {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 0.3rem;
+    box-sizing: border-box;
+}
+
+.memo-button,
+.delete-button {
+    margin-top: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.delete-button {
+    background-color: #fdd;
+    border: 1px solid #faa;
+}
+
+.memo-button {
+    background-color: #eef;
+    border: 1px solid #cce;
+}

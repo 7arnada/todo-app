@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // セッション開始
 session_start();
 
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['memo_id'])) {
 }
 
 // タスク一覧を取得
-$stmt = $pdo->query('SELECT id, title, description, completed, created_at FROM tasks ORDER BY created_at DESC');
+$stmt = $pdo->query('SELECT id, title, completed, description, created_at FROM tasks ORDER BY created_at DESC');
 $tasks = $stmt->fetchAll();
 ?>
 
@@ -75,25 +75,7 @@ $tasks = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <title>ToDoアプリ</title>
-    <style>
-        body.theme-white { background-color: #fff; color: #000; }
-        body.theme-dark { background-color: #333; color: #fff; }
-        body.theme-pink { background-color: #ffb6c1; color: #000; }
-        body.theme-auto { /* JavaScriptで処理 */ }
-
-        .theme-selector {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            body.theme-auto { background-color: #333; color: #fff; }
-        }
-        @media (prefers-color-scheme: light) {
-            body.theme-auto { background-color: #fff; color: #000; }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-<?php echo $currentTheme; ?>">
     <div class="theme-selector">
@@ -109,36 +91,52 @@ $tasks = $stmt->fetchAll();
     </div>
 
     <h1>ToDoリスト</h1>
-    
+
     <!-- タスク追加フォーム -->
     <form method="POST" action="">
         <input type="text" name="task" placeholder="新しいタスクを入力" required>
+        <input type="text" name="description" placeholder="メモ (任意)">
         <button type="submit">追加</button>
     </form>
-    
+
     <!-- タスクリスト表示 -->
-    <ul>
+    <table class="task-table">
+        <thead>
+            <tr>
+                <th>チェック</th>
+                <th>タスク項目</th>
+                <th>作成日時</th>
+                <th>メモ</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
         <?php foreach ($tasks as $task): ?>
-            <li style="<?php echo $task['completed'] ? 'text-decoration: line-through;' : ''; ?>">
-                <form method="POST" action="" style="display: inline;">
-                    <input type="hidden" name="toggle_id" value="<?php echo $task['id']; ?>">
-                    <input type="checkbox" onchange="this.form.submit()" <?php echo $task['completed'] ? 'checked' : ''; ?>>
-                </form>
-                <?php echo htmlspecialchars($task['title']); ?> <small>(<?php echo htmlspecialchars("作成日時: " . $task['created_at']); ?>)</small>
-                  <form method="POST" action="" style="display: inline;">
-                    <input type="hidden" name="delete_id" value="<?php echo $task['id']; ?>">
-                    <button type="submit" onclick="return confirm('このタスクを削除しますか？')">削除</button>
-              
-    
-                <form method="POST" action="">
-                    <textarea name="memo" rows="1" placeholder="メモを入力"><?php echo htmlspecialchars($task['description'] ?? ''); ?></textarea>
-                    <input type="hidden" name="memo_id" value="<?php echo $task['id']; ?>">
-                    <button type="submit">メモ更新</button>
-                </form>
-              
-            </li>
-            <br>
+            <tr class="<?php echo $task['completed'] ? 'completed' : ''; ?>">
+                <td>
+                    <form method="POST" action="">
+                        <input type="hidden" name="toggle_id" value="<?php echo $task['id']; ?>">
+                        <input type="checkbox" onchange="this.form.submit()" <?php echo $task['completed'] ? 'checked' : ''; ?>>
+                    </form>
+                </td>
+                <td><?php echo htmlspecialchars($task['title']); ?></td>
+                <td><?php echo htmlspecialchars($task['created_at']); ?></td>
+                <td>
+                    <form method="POST" action="" style="display:flex; align-items:center; gap:8px;"; >
+                        <textarea name="memo" rows="1" style="flex:1;" class="memo-textarea" placeholder="メモを入力"><?php echo htmlspecialchars($task['description'] ?? ''); ?></textarea>
+                        <input type="hidden" name="memo_id" value="<?php echo $task['id']; ?>">
+                        <button type="submit" class="memo-button">更新</button>
+                    </form>
+                </td>
+                <td>
+                    <form method="POST" action="">
+                        <input type="hidden" name="delete_id" value="<?php echo $task['id']; ?>">
+                        <button type="submit" class="delete-button" onclick="return confirm('このタスクを削除しますか？')">削除</button>
+                    </form>
+                </td>
+            </tr>
         <?php endforeach; ?>
-    </ul>
+        </tbody>
+    </table>
 </body>
 </html>
