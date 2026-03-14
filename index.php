@@ -1,6 +1,19 @@
 <?php
+// セッション開始
+session_start();
+
 // データベース接続を読み込む
 require_once __DIR__ . '/db.php';
+
+// スタイル変更処理
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['theme'])) {
+    $_SESSION['theme'] = $_POST['theme'];
+    header('Location: ' . $_SERVER['REQUEST_URI']);
+    exit;
+}
+
+// 現在のテーマを取得（デフォルト: white）
+$currentTheme = $_SESSION['theme'] ?? 'white';
 
 // タスクの追加処理
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['task'])) {
@@ -62,8 +75,39 @@ $tasks = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <title>ToDoアプリ</title>
+    <style>
+        body.theme-white { background-color: #fff; color: #000; }
+        body.theme-dark { background-color: #333; color: #fff; }
+        body.theme-pink { background-color: #ffb6c1; color: #000; }
+        body.theme-auto { /* JavaScriptで処理 */ }
+
+        .theme-selector {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body.theme-auto { background-color: #333; color: #fff; }
+        }
+        @media (prefers-color-scheme: light) {
+            body.theme-auto { background-color: #fff; color: #000; }
+        }
+    </style>
 </head>
-<body>
+<body class="theme-<?php echo $currentTheme; ?>">
+    <div class="theme-selector">
+        <form method="POST" action="">
+            <label for="theme">テーマ:</label>
+            <select name="theme" id="theme" onchange="this.form.submit()">
+                <option value="white" <?php echo $currentTheme === 'white' ? 'selected' : ''; ?>>ホワイト</option>
+                <option value="dark" <?php echo $currentTheme === 'dark' ? 'selected' : ''; ?>>ダーク</option>
+                <option value="pink" <?php echo $currentTheme === 'pink' ? 'selected' : ''; ?>>ピンク</option>
+                <option value="auto" <?php echo $currentTheme === 'auto' ? 'selected' : ''; ?>>Windowsの設定に合わせる</option>
+            </select>
+        </form>
+    </div>
+
     <h1>ToDoリスト</h1>
     
     <!-- タスク追加フォーム -->
