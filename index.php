@@ -14,6 +14,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['task'])) {
     }
 }
 
+// タスクの削除処理
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $deleteId = (int)$_POST['delete_id'];
+    if ($deleteId > 0) {
+        $stmt = $pdo->prepare('DELETE FROM tasks WHERE id = :id');
+        $stmt->execute(['id' => $deleteId]);
+        // 成功したらリダイレクト
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
+    }
+}
+
 // タスク一覧を取得
 $stmt = $pdo->query('SELECT id, title, created_at FROM tasks ORDER BY created_at DESC');
 $tasks = $stmt->fetchAll();
@@ -37,7 +49,13 @@ $tasks = $stmt->fetchAll();
     <!-- タスクリスト表示 -->
     <ul>
         <?php foreach ($tasks as $task): ?>
-            <li><?php echo htmlspecialchars($task['title']); ?> <small>(<?php echo htmlspecialchars($task['created_at']); ?>)</small></li>
+            <li>
+                <?php echo htmlspecialchars($task['title']); ?> <small>(<?php echo htmlspecialchars($task['created_at']); ?>)</small>
+                <form method="POST" action="" style="display: inline;">
+                    <input type="hidden" name="delete_id" value="<?php echo $task['id']; ?>">
+                    <button type="submit" onclick="return confirm('このタスクを削除しますか？')">削除</button>
+                </form>
+            </li>
         <?php endforeach; ?>
     </ul>
 </body>
