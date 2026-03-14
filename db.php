@@ -17,7 +17,7 @@ $options = [
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (PDOException $e) {
-    // 本番環境ではエラーメッセージを直接出さないように注意してください
+    
     exit('データベース接続に失敗しました: ' . $e->getMessage());
 }
 
