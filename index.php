@@ -5,9 +5,10 @@ require_once __DIR__ . '/db.php';
 // タスクの追加処理
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['task'])) {
     $newTask = trim($_POST['task']);
+    $description = trim($_POST['description'] ?? '');
     if (!empty($newTask)) {
-        $stmt = $pdo->prepare('INSERT INTO tasks (title) VALUES (:title)');
-        $stmt->execute(['title' => $newTask]);
+        $stmt = $pdo->prepare('INSERT INTO tasks (title, description) VALUES (:title, :description)');
+        $stmt->execute(['title' => $newTask, 'description' => $description]);
         // 成功したらリダイレクトしてPOSTリクエストの再送を防ぐ
         header('Location: ' . $_SERVER['REQUEST_URI']);
         exit;
@@ -26,8 +27,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     }
 }
 
+// タスクの完了状態トグル処理
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_id'])) {
+    $toggleId = (int)$_POST['toggle_id'];
+    if ($toggleId > 0) {
+        $stmt = $pdo->prepare('UPDATE tasks SET completed = 1 - completed WHERE id = :id');
+        $stmt->execute(['id' => $toggleId]);
+        // 成功したらリダイレクト
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
+    }
+}
+
+// メモ更新処理
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['memo_id'])) {
+    $memoId = (int)$_POST['memo_id'];
+    $memo = trim($_POST['memo'] ?? '');
+    if ($memoId > 0) {
+        $stmt = $pdo->prepare('UPDATE tasks SET description = :description WHERE id = :id');
+        $stmt->execute(['description' => $memo, 'id' => $memoId]);
+        // 成功したらリダイレクト
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
+    }
+}
+
 // タスク一覧を取得
-$stmt = $pdo->query('SELECT id, title, created_at FROM tasks ORDER BY created_at DESC');
+$stmt = $pdo->query('SELECT id, title, description, completed, created_at FROM tasks ORDER BY created_at DESC');
 $tasks = $stmt->fetchAll();
 ?>
 
@@ -49,13 +75,25 @@ $tasks = $stmt->fetchAll();
     <!-- タスクリスト表示 -->
     <ul>
         <?php foreach ($tasks as $task): ?>
-            <li>
-                <?php echo htmlspecialchars($task['title']); ?> <small>(<?php echo htmlspecialchars($task['created_at']); ?>)</small>
+            <li style="<?php echo $task['completed'] ? 'text-decoration: line-through;' : ''; ?>">
                 <form method="POST" action="" style="display: inline;">
+                    <input type="hidden" name="toggle_id" value="<?php echo $task['id']; ?>">
+                    <input type="checkbox" onchange="this.form.submit()" <?php echo $task['completed'] ? 'checked' : ''; ?>>
+                </form>
+                <?php echo htmlspecialchars($task['title']); ?> <small>(<?php echo htmlspecialchars("作成日時: " . $task['created_at']); ?>)</small>
+                  <form method="POST" action="" style="display: inline;">
                     <input type="hidden" name="delete_id" value="<?php echo $task['id']; ?>">
                     <button type="submit" onclick="return confirm('このタスクを削除しますか？')">削除</button>
+              
+    
+                <form method="POST" action="">
+                    <textarea name="memo" rows="1" placeholder="メモを入力"><?php echo htmlspecialchars($task['description'] ?? ''); ?></textarea>
+                    <input type="hidden" name="memo_id" value="<?php echo $task['id']; ?>">
+                    <button type="submit">メモ更新</button>
                 </form>
+              
             </li>
+            <br>
         <?php endforeach; ?>
     </ul>
 </body>

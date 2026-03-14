@@ -26,6 +26,14 @@ $pdo->exec(
     "CREATE TABLE IF NOT EXISTS tasks (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        description TEXT
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
 );
+
+// 既存テーブルにdescriptionカラムを追加（存在しない場合）
+try {
+    $pdo->exec("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS description TEXT;");
+} catch (PDOException $e) {
+    // カラムが既に存在する場合のエラーを無視
+}
