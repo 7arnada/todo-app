@@ -66,18 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_id'])) {
     }
 }
 
-// タスクの完了状態トグル処理
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids[]'])) {
-    $deleteIds = (int)$_POST['delete_ids[]'];
-    if ($deleteIds > 0) {
-        $stmt = $pdo->prepare('UPDATE tasks SET completed = 1 - completed WHERE id = :id');
-        $stmt->execute(['id' => $deleteIds]);
-        // 成功したらリダイレクト
-        header('Location: ' . $_SERVER['REQUEST_URI']);
-        exit;
-    }
-}
-
 // メモ更新処理。preareはSQLインジェクション対策用の安全にSQLを実行するメソッド。 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['memo_id'])) {
     $memoId = (int)$_POST['memo_id'];
@@ -89,6 +77,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['memo_id'])) {
         header('Location: ' . $_SERVER['REQUEST_URI']);
         exit;
     }
+}
+
+
+// ファイルのimport処理
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['task_file'])) {
+    $file = $_FILES['task_file']['tmp_name'];
+
+    $type = mime_content_type($_FILES['task_file']['tmp_name']);
+
+    $ext = pathinfo($_FILES['task_file']['name'], PATHINFO_EXTENSION);
+
+    if ($ext !== "txt" || $type !== "text/plain") {
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
+    }
+    
+    $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = str_replace("；", ";", $line);// 全角セミコロンを半角に変換
+        $parts = explode(';', $line);
+        $line = trim($line);
+        $title = $parts[0];
+        $description  = $parts[1] ?? '';
+        $stmt = $pdo->prepare("INSERT INTO tasks (title, description) VALUES (:title, :description)");
+        $stmt->execute([':title' => $title, ':description' => $description]);
+    }
+
+    // 成功したらリダイレクト
+    header('Location: ' . $_SERVER['REQUEST_URI']);
+    exit;
 }
 
 // タスク一覧を取得。fetchAllは結果を全部取り出す
@@ -128,7 +146,10 @@ $tasks = $stmt->fetchAll();
         <input type="hidden" name="bulk_delete" value="<?php echo $task['id']; ?>">
         <button type="submit" name="bulk_delete" value="1" onclick="return confirm('選択したタスクを削除しますか？')">一括削除</button>
     </form>
-
+        <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="task_file" accept=".txt">
+        <button type="submit">インポート</button>
+    </form>
 
     <!-- タスクリスト表示 -->
     <table class="task-table">
